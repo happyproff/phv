@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+ARG="$1"
+TARGET=$(update-alternatives --list php | grep "$ARG")
+TARGET=$(update-alternatives --list php | grep "$ARG") && FOUND=1 || FOUND=0
+TARGETS_COUNT=$(echo "$TARGET" | wc -l)
+
+if [ "$FOUND" != "1" ]; then
+    echo "Error! Target not found."
+
+    echo
+    echo "Available targets:"
+    update-alternatives --list php
+
+    exit 1
+fi
+
+if [ "$TARGETS_COUNT" != "1" ]; then
+    echo "Error! Found multiple targets."
+
+    echo
+    echo "Available targets:"
+    update-alternatives --list php
+
+    echo
+    echo "Found targets:"
+    echo "$TARGET"
+
+    exit 1
+fi
+
+for group in php phar phar.phar; do
+    GROUP_TARGET=$(update-alternatives --list "$group" | grep "$ARG")
+    sudo update-alternatives --set "$group" "$GROUP_TARGET"
+done
+
+echo
+php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION . "." . PHP_RELEASE_VERSION . "\n";'
