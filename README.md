@@ -11,7 +11,7 @@ PHP 8.3.12 (cli) (built: Sep 27 2024 03:53:05) (NTS)
 
 `$ phv`
 
-```shell
+```
 Selected:
 8.3.12
 
