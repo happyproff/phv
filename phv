@@ -1,38 +1,65 @@
 #!/usr/bin/env bash
 
-ARG="$1"
-TARGET=$(update-alternatives --list php | grep "$ARG")
-TARGET=$(update-alternatives --list php | grep "$ARG") && FOUND=1 || FOUND=0
-TARGETS_COUNT=$(echo "$TARGET" | wc -l)
+function print_selected {
+    echo
+    echo "Selected:"
+    php -r 'echo PHP_VERSION . "\n";'
+}
 
-if [ "$FOUND" != "1" ]; then
-    echo "Error! Target not found."
+function print_available {
+    echo
+    echo "Available:"
+    update-alternatives --list php | sed 's/\/usr\/bin\/php//'
+}
+
+QUERY="$1"
+if [ "$QUERY" = "" ] || [ "$QUERY" = "--help" ]; then
+    print_selected
+
+    print_available
 
     echo
-    echo "Available targets:"
-    update-alternatives --list php
+    echo "To select another version, specify it like this:"
+    echo "  phv 8.2"
+
+    echo
+
+    exit 0
+fi
+
+TARGET=$(update-alternatives --list php | grep "$QUERY") && FOUND=1 || FOUND=0
+if [ "$FOUND" == "0" ]; then
+    echo
+    echo "Error! No target found with '$QUERY'."
+
+    print_available
+
+    echo
 
     exit 1
 fi
 
+TARGETS_COUNT=$(echo "$TARGET" | wc -l)
 if [ "$TARGETS_COUNT" != "1" ]; then
-    echo "Error! Found multiple targets."
-
     echo
-    echo "Available targets:"
-    update-alternatives --list php
+    echo "Error! More then one target found with '$QUERY'."
 
     echo
     echo "Found targets:"
     echo "$TARGET"
 
+    print_available
+
+    echo
+
     exit 1
 fi
 
+echo
 for group in php phar phar.phar; do
-    GROUP_TARGET=$(update-alternatives --list "$group" | grep "$ARG")
+    GROUP_TARGET=$(update-alternatives --list "$group" | grep "$QUERY")
     sudo update-alternatives --set "$group" "$GROUP_TARGET"
 done
 
+print_selected
 echo
-php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION . "." . PHP_RELEASE_VERSION . "\n";'
